@@ -1,40 +1,12 @@
-import argparse
+from extras import create_logger, args
 import logging
-import sys
-import time
-import os
-
 import torch
 from torch import nn
-import torch.nn.functional as F
-import torchvision
 import torch.optim as optim
-import torchvision.transforms as transforms
-from torchvision.datasets import ImageFolder
 from loaders import create_data_loader, LoaderType
 
 from network import AlexNet
 
-parser = argparse.ArgumentParser(description= \
-                                     'scipt for training of project 2')
-parser.add_argument('--cuda', action='store_true', default=False,
-                    help='Used when there are cuda installed.')
-args = parser.parse_args()
-def create_logger(final_output_path):
-    log_file = '{}.log'.format(time.strftime('%Y-%m-%d-%H-%M'))
-    head = '%(asctime)-15s %(message)s'
-    logging.basicConfig(filename=os.path.join(final_output_path, log_file),
-                        format=head)
-    clogger = logging.getLogger()
-    clogger.setLevel(logging.INFO)
-    # add handler
-    # print to stdout and log file
-    ch = logging.StreamHandler(sys.stdout)
-    ch.setLevel(logging.INFO)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    ch.setFormatter(formatter)
-    clogger.addHandler(ch)
-    return clogger
 
 def train_net(net, trainloader, valloader, logging, criterion, optimizer, scheduler, epochs=1):
 
