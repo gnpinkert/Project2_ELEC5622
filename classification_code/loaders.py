@@ -1,5 +1,6 @@
 import torchvision.transforms as transforms
 from pathlib import Path
+from bidict import bidict
 from typing import List, Tuple, Dict, Any
 import git
 from enum import Enum
@@ -13,6 +14,12 @@ from torch.utils.data import Dataset, DataLoader
 BATCH_SIZE: int = 4
 NUMBER_OF_WORKERS: int = 10
 
+LABEL_MAP = bidict({"Homogeneous": 0,
+                    "Speckled": 1,
+                    "Nucleolar": 2,
+                    "Centromere": 3,
+                    "NuMem": 4,
+                    "Golgi": 5})
 
 class ProjectData(Dataset):
     def __init__(self, data, labels, transform=None):
@@ -32,7 +39,7 @@ class ProjectData(Dataset):
         if self.transform:
             image = self.transform(image)
         image = image.expand(3, -1, -1)
-        return image, label
+        return image, LABEL_MAP[label]
 
 
 class LoaderType(Enum):
