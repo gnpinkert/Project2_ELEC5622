@@ -66,7 +66,7 @@ def train_net(net, trainloader, valloader, logging, criterion, optimizer, schedu
 
 
     # save network
-    torch.save(net, 'project2_modified.pth')
+    torch.save(net.state_dict(), 'project2_modified.pth')
     # write finish to the file
     logging.info('Finished Training')
 
