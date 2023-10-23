@@ -7,7 +7,7 @@ import ssl
 class AlexNet(nn.Module):
     def __init__(self):
         super(AlexNet, self).__init__()
-        self.alexnet = torchvision.models.alexnet(pretrained=True)
+        self.alexnet = torchvision.models.alexnet(weights="IMAGENET1K_V1")
         self.fc1 = nn.Linear(1000, 6)
 
     def forward(self, x):
