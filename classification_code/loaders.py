@@ -26,12 +26,12 @@ class ProjectData(Dataset):
     def __getitem__(self, index):
         sample: Path = self.data[index]
         filename = str(sample.stem)
-        image = Image.open(sample)
-        label = self.labels[filename]
+        image = Image.open(sample).convert("L")
+        label = self.labels[str(int(filename))]
 
         if self.transform:
-            image = self.transform(sample)
-
+            image = self.transform(image)
+        image = image.expand(3, -1, -1)
         return image, label
 
 
@@ -42,18 +42,18 @@ class LoaderType(Enum):
 
 
 _test_transform = transforms.Compose([
-    transforms.Resize((256, 256)),
+    transforms.Resize((224, 224)),
     transforms.ToTensor(),
-    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    transforms.Normalize((0.5), (0.5))
 ])
 
 _train_transform = transforms.Compose([
     # transforms.RandomResizedCrop(size=224, scale=(0.8, 0.8)),
-    transforms.Resize((256, 256)),
+    transforms.Resize((224, 224)),
     transforms.RandomHorizontalFlip(),
     transforms.RandomVerticalFlip(),
     transforms.ToTensor(),
-    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    transforms.Normalize((0.5), (0.5))
 ])
 
 
