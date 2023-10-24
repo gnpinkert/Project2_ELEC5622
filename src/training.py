@@ -7,7 +7,6 @@ import torch.optim as optim
 from loaders import create_data_loader, LoaderType, BATCH_SIZE
 from pathlib import Path
 
-
 from network import AlexNet
 
 
@@ -16,7 +15,7 @@ def train_net(net, trainloader, valloader, logging, training_details: TrainingDe
     optimizer = optim.SGD(params=net.parameters(),
                           lr=training_details.learning_rate,
                           momentum=training_details.momentum)  # adjust optimizer settings
-    scheduler=None
+    scheduler = None
     for param in net.alexnet.parameters():
         param.requires_grad = False
 
@@ -42,9 +41,9 @@ def train_net(net, trainloader, valloader, logging, training_details: TrainingDe
 
             # print statistics and write to log
             running_loss += loss.item()
-            if i % 20 == 19:    # print every 2000 mini-batches
+            if i % 20 == 19:  # print every 2000 mini-batches
                 logging.info('[%d, %5d] Training loss: %.3f' %
-                      (epoch + 1, i + 1, running_loss / 20))
+                             (epoch + 1, i + 1, running_loss / 20))
                 running_loss = 0.0
         if type(scheduler).__name__ != 'NoneType':
             scheduler.step()
@@ -73,7 +72,6 @@ def train_net(net, trainloader, valloader, logging, training_details: TrainingDe
                              (epoch + 1, i + 1, running_loss / 20))
                 running_loss = 0.0
             correct += (outputs.argmax(1) == labels).sum().item()
-
 
     # save network
     save_model_information(network=net,
@@ -112,5 +110,6 @@ def main():
               training_details=training_details,
               logging=logging)
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     main()

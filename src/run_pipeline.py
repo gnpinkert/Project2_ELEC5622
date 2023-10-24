@@ -22,6 +22,7 @@ def main():
                                        epochs=1,
                                        output_dir=Path(""))
     network = AlexNet()
+
     output_directory = make_output_directory(training_details=training_details)
     training_details.output_dir = output_directory
 
@@ -36,7 +37,7 @@ def main():
               logging=logging)
     unregister_sig_abrt()
 
-    eval_net(net=network, loader=test_loader, final_output_path=output_directory)
+    eval_net(net=network, loader=test_loader, final_output_path=Path("/Users/grant/UniSydney/signals_software_and_health/Project2_ELEC5622/models/batch_4_lr_0_0004_momentum_0_9_epochs_1/14_30_50"))
 
 
 if __name__ == "__main__":

@@ -41,7 +41,7 @@ def _get_criterion_string(criterion):
 def save_model_information(network: AlexNet, output_directory: Path, optimizer, criterion, scheduler):
     torch.save(network.state_dict(), f=output_directory / "project2.pth")
     network_details = Path("network_details.txt")
-    with open(output_directory / network_details) as file:
+    with open(output_directory / network_details, "w") as file:
         file.write(_get_scheduler_string(scheduler=scheduler))
         file.write(_get_optimizer_string(optimizer=optimizer))
         file.write(_get_criterion_string(criterion=criterion))
