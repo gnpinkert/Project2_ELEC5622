@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 from NetworkDetails import TrainingDetails
 from extras import get_repo_root_dir, check_lists_equal_length
-from typing import List
 from ast import literal_eval
 
 
@@ -46,7 +45,7 @@ def plot_data(file_path: Path):
 
     ax1.plot(epochs, training_loss, label="Training")
     ax1.plot(epochs, validation_loss, label="Validation")
-    ax1.set_title("Loss")
+    ax1.set_title("Loss [-]")
     ax1.set_xlabel("Epoch")
     ax1.set_ylabel("Loss")
     ax1.grid("on")
@@ -56,13 +55,13 @@ def plot_data(file_path: Path):
     ax2.plot(epochs, validation_accuracy, label="Validation")
     ax2.set_title("Accuracy")
     ax2.set_xlabel("Epoch")
-    ax2.set_ylabel("Accuracy")
+    ax2.set_ylabel("Accuracy (%)")
     ax2.grid("on")
     ax2.legend()
 
     plt.tight_layout()
 
-    plt.savefig(filepath / "accuracy_validation_plot.png")
+    plt.savefig(filepath / "accuracy_validation_plot.png", dpi=600, bbox_inches="tight")
     plt.show()
 
 
@@ -73,7 +72,7 @@ def main():
                                        epochs=2,
                                        output_dir=Path(""))
 
-    file_path = get_repo_root_dir() / "models" / str(training_details) /  "15_48_13"
+    file_path = get_repo_root_dir() / "models" / str(training_details) / "15_48_13"
     plot_data(file_path=file_path)
 
 
