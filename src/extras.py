@@ -49,17 +49,14 @@ def make_output_directory(training_details: TrainingDetails):
     return final_output_path
 
 
-def _handle_sigabrt(signum, frame, directory_to_clean: Path):
-    print("Received SIGABRT signal. Handling it now.")
-    shutil.rmtree(directory_to_clean)
+def check_lists_equal_length(*lists):
+    # Get the length of the first list
+    first_length = len(lists[0])
 
-
-def register_sig_abrt(directory_to_clean: Path):
-    signal.signal(signal.SIGABRT, lambda signum, frame: _handle_sigabrt(signum, frame, directory_to_clean=directory_to_clean))
-
-
-def unregister_sig_abrt():
-    signal.signal(signal.SIGABRT, signal.SIG_DFL)
+    # Check the lengths of the remaining lists
+    for lst in lists[1:]:
+        if len(lst) != first_length:
+            raise ValueError("Lists are not of equal length")
 
 
 

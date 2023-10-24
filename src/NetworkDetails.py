@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from network import AlexNet
 import torch
 from pathlib import Path
+from typing import List
 
 @dataclass
 class TrainingDetails:
@@ -38,10 +39,22 @@ def _get_criterion_string(criterion):
         return f"Criterion Type: {type(criterion)}\nCriterion Parameters: {criterion.__dict__}"
 
 
-def save_model_information(network: AlexNet, output_directory: Path, optimizer, criterion, scheduler):
+def save_model_information(network: AlexNet,
+                           output_directory: Path,
+                           optimizer,
+                           criterion,
+                           scheduler,
+                           validation_loss: List[float],
+                           validation_accuracy: List[float],
+                           training_loss: List[float],
+                           training_accuracy: List[float]):
     torch.save(network.state_dict(), f=output_directory / "project2.pth")
     network_details = Path("network_details.txt")
     with open(output_directory / network_details, "w") as file:
+        file.write(f"{validation_loss}\n"),
+        file.write(f"{validation_accuracy}\n"),
+        file.write(f"{training_loss}\n"),
+        file.write(f"{training_accuracy}\n"),
         file.write(_get_scheduler_string(scheduler=scheduler))
         file.write(_get_optimizer_string(optimizer=optimizer))
         file.write(_get_criterion_string(criterion=criterion))
