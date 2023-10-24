@@ -2,14 +2,13 @@ import torchvision.transforms as transforms
 from pathlib import Path
 from bidict import bidict
 from typing import List, Tuple, Dict, Any
-import git
 from enum import Enum
 from PIL import Image
 import csv
-
 import torchvision.transforms.v2
 import torch
 from torch.utils.data import Dataset, DataLoader
+from extras import get_repo_root_dir
 
 BATCH_SIZE: int = 4
 NUMBER_OF_WORKERS: int = 10
@@ -64,19 +63,14 @@ _train_transform = transforms.Compose([
 ])
 
 
-def _get_repo_root_dir() -> Path:
-    git_repo = git.Repo("./", search_parent_directories=True)
-    git_root = git_repo.git.rev_parse("--show-toplevel")
-    return Path(git_root)
-
 
 def _load_label_csv():
-    repo_root_dir = _get_repo_root_dir()
+    repo_root_dir = get_repo_root_dir()
     csv_file_name = "gt_training.csv"
 
     label_csv_path: Path = repo_root_dir / "training_data" / csv_file_name
     if not label_csv_path.exists():
-        raise Exception(f"File {csv_file_name} not found in {label_csv_path.stem}")
+        raise RuntimeError(f"File {csv_file_name} not found in {label_csv_path.stem}")
     labels_dict: Dict[str, str] = {}
 
     with open(label_csv_path) as csv_file:
@@ -87,11 +81,11 @@ def _load_label_csv():
 
 
 def _get_image_filepaths(data_directory: Path) -> List[Path]:
-    repo_root_dir = _get_repo_root_dir()
+    repo_root_dir = get_repo_root_dir()
     data_dir = repo_root_dir / data_directory
 
     if not data_dir.exists():
-        raise Exception(f"Invalid data directory: {data_dir}")
+        raise RuntimeError(f"Invalid data directory: {data_dir}")
 
     file_paths: List[Path] = []
     for file in data_dir.rglob('*.*'):
@@ -109,7 +103,7 @@ def _get_data_dir_and_transform(loader_enum: LoaderType) -> Tuple[Path, torchvis
         case loader_enum.VALIDATION:
             return data_dir / "validation", _test_transform
         case _:
-            raise Exception(f"Invalid enum type: {loader_enum}")
+            raise RuntimeError(f"Invalid enum type: {loader_enum}")
 
 
 def create_data_loader(loader_enum: LoaderType) -> DataLoader[Any]:
@@ -131,7 +125,7 @@ def main():
     data_set_tuples = load_all_datasets()
 
     for data_set, data_type in data_set_tuples:
-        print(f"There are {len(data_set)} in data set: {data_type}")
+        print(f"There are {len(data_set)} with batch size: {BATCH_SIZE} in data set: {data_type}")
 
 
 if __name__ == "__main__":

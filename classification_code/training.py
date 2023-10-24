@@ -1,16 +1,26 @@
-from extras import create_logger, args
+from extras import create_logger, args, make_output_directory
 import logging
 import torch
+from NetworkDetails import TrainingDetails, save_model_information
 from torch import nn
 import torch.optim as optim
-from loaders import create_data_loader, LoaderType
+from loaders import create_data_loader, LoaderType, BATCH_SIZE
+from pathlib import Path
+
 
 from network import AlexNet
 
 
-def train_net(net, trainloader, valloader, logging, criterion, optimizer, scheduler, epochs=1):
+def train_net(net, trainloader, valloader, logging, training_details: TrainingDetails):
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.SGD(params=net.parameters(),
+                          lr=training_details.learning_rate,
+                          momentum=training_details.momentum)  # adjust optimizer settings
+    scheduler=None
+    for param in net.alexnet.parameters():
+        param.requires_grad = False
 
-    for epoch in range(epochs):  # loop over the dataset multiple times, only 1 time by default
+    for epoch in range(training_details.epochs):  # loop over the dataset multiple times, only 1 time by default
         running_loss = 0.0
         net = net.train()
         for i, data in enumerate(trainloader, 0):
@@ -66,7 +76,11 @@ def train_net(net, trainloader, valloader, logging, criterion, optimizer, schedu
 
 
     # save network
-    torch.save(net.state_dict(), 'project2_modified.pth')
+    save_model_information(network=net,
+                           output_directory=training_details.output_dir,
+                           optimizer=optimizer,
+                           criterion=criterion,
+                           scheduler=scheduler)
     # write finish to the file
     logging.info('Finished Training')
 
@@ -78,16 +92,25 @@ def main():
     training_loader = create_data_loader(LoaderType.TRAIN)
     validation_loader = create_data_loader(LoaderType.VALIDATION)
 
-    logger = create_logger('./')
+    training_details = TrainingDetails(batch_size=BATCH_SIZE,
+                                       learning_rate=0.0004,
+                                       momentum=0.9,
+                                       epochs=10,
+                                       output_dir=Path(""))
+
+    output_directory = make_output_directory(training_details=training_details)
+
+    training_details.output_dir = output_directory
+
+    logger = create_logger(training=True, final_output_path=output_directory)
     logger.info('using args:')
     logger.info(args)
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(network.parameters(), lr=0.0004, momentum=0.9)  # adjust optimizer settings
 
-    for param in network.alexnet.parameters():
-        param.requires_grad = False
-
-    train_net(net=network, trainloader=training_loader, valloader=validation_loader, criterion=criterion, optimizer=optimizer, scheduler=None, epochs=10, logging=logging)
+    train_net(net=network,
+              trainloader=training_loader,
+              valloader=validation_loader,
+              training_details=training_details,
+              logging=logging)
 
 if __name__=="__main__":
     main()

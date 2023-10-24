@@ -1,10 +1,15 @@
-from extras import create_logger, args
+from extras import create_logger, args, make_output_directory
 import logging
 from network import AlexNet
 from loaders import create_data_loader, LoaderType
 import torch
 
-def eval_net(net, loader, logger):
+
+def eval_net(net, loader, final_output_path):
+    logger = create_logger(args.output_path, final_output_path=final_output_path)
+    logger.info('using args:')
+    logger.info(args)
+
     net = net.eval()
     if args.cuda:
         net = net.cuda()
@@ -37,15 +42,15 @@ def eval_net(net, loader, logger):
     logger.info('The number of testing image is {}'.format(total))
     logging.info('Accuracy of the network on the test images: {} %'.format(100 * round(correct / total, 4)))
     logging.info('=' * 55)
-def main():
-    logger = create_logger(args.output_path)
-    logger.info('using args:')
-    logger.info(args)
 
+
+def main():
+    output_directory = make_output_directory()
     test_loader = create_data_loader(LoaderType.TEST)
     network = AlexNet()
 
-    eval_net(net=network, loader=test_loader, logger=logger)
+    eval_net(net=network, loader=test_loader,final_output_path=output_directory)
+
 
 if __name__ == "__main__":
     main()

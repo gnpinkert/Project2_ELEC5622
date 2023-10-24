@@ -1,7 +1,12 @@
-import time
+from datetime import datetime
 import argparse
 import logging
 import os.path
+import shutil
+from pathlib import Path
+from NetworkDetails import TrainingDetails
+import git
+import signal
 import sys
 
 parser = argparse.ArgumentParser(description= \
@@ -11,8 +16,16 @@ parser.add_argument('--cuda', action='store_true', default=False,
 parser.add_argument('--output_path', default='./', type=str,
                     help='The path that stores the log files.')
 args = parser.parse_args()
-def create_logger(final_output_path):
-    log_file = '{}.log'.format(time.strftime('%Y-%m-%d-%H-%M'))
+
+
+def get_repo_root_dir() -> Path:
+    git_repo = git.Repo("./", search_parent_directories=True)
+    git_root = git_repo.git.rev_parse("--show-toplevel")
+    return Path(git_root)
+
+
+def create_logger(training: bool, final_output_path: Path):
+    log_file = f"{'training' if training else 'test'}.log"
     head = '%(asctime)-15s %(message)s'
     logging.basicConfig(filename=os.path.join(final_output_path, log_file),
                         format=head)
@@ -26,3 +39,28 @@ def create_logger(final_output_path):
     ch.setFormatter(formatter)
     clogger.addHandler(ch)
     return clogger
+
+
+def make_output_directory(training_details: TrainingDetails):
+    root_dir = get_repo_root_dir()
+    final_dir_name = Path(str(training_details)) / f"{datetime.now():%H_%M_%S}"
+    final_output_path = root_dir / "models" / final_dir_name
+    os.makedirs(final_output_path, exist_ok=True)
+    return final_output_path
+
+
+def _handle_sigabrt(signum, frame, directory_to_clean: Path):
+    print("Received SIGABRT signal. Handling it now.")
+    shutil.rmtree(directory_to_clean)
+
+
+def register_sig_abrt(directory_to_clean: Path):
+    signal.signal(signal.SIGABRT, lambda signum, frame: _handle_sigabrt(signum, frame, directory_to_clean=directory_to_clean))
+
+
+def unregister_sig_abrt():
+    signal.signal(signal.SIGABRT, signal.SIG_DFL)
+
+
+
+
