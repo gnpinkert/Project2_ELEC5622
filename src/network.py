@@ -8,16 +8,16 @@ class AlexNet(nn.Module):
     def __init__(self):
         super(AlexNet, self).__init__()
         self.alexnet = torchvision.models.alexnet(weights="IMAGENET1K_V1")
-        self.fc1 = nn.Linear(1000, 6)
+        self.alexnet.classifier[6] = nn.Linear(4096, 6, bias = True)
 
     def forward(self, x):
         x = self.alexnet(x)
-        x = self.fc1(x)
         return x
 
 def main():
     ssl._create_default_https_context = ssl._create_unverified_context
     testmodel = AlexNet()
+    pass
 
 if __name__ == "__main__":
     main()
