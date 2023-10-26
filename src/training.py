@@ -1,32 +1,42 @@
 from extras import create_logger, args, make_output_directory
 import logging
 import torch
+import copy
 from NetworkDetails import TrainingDetails, save_model_information
 from torch import nn
 import torch.optim as optim
 from loaders import create_data_loader, LoaderType, BATCH_SIZE
 from pathlib import Path
+import time
 
 from network import AlexNet
 
+def train_net(net, trainloader, valloader, logging, training_details:TrainingDetails, print_every_samples = 50, patience = 3):
 
-def train_net(net, trainloader, valloader, logging, training_details: TrainingDetails):
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(params=net.parameters(),
                           lr=training_details.learning_rate,
                           momentum=training_details.momentum)  # adjust optimizer settings
     scheduler = None
     for param in net.alexnet.parameters():
-        param.requires_grad = False
+         param.requires_grad = False
+    for param in net.alexnet.classifier.parameters():
+        param.requires_grad = True
 
-    training_loss = []
-    training_accuracy = []
-    validation_loss = []
-    validation_accuracy = []
+    validation_loss_list = []
+    training_loss_list = []
+    validation_accuracy_list = []
+    training_accuracy_list = []
+
+    best_state_dictionary = None
+    best_validation_accuracy = 0.0
+    inertia = 0
+    start = time.process_time()
     for epoch in range(training_details.epochs):  # loop over the dataset multiple times, only 1 time by default
+
+        training_loss = 0.0
+        training_accuracy = 0.0
         running_loss = 0.0
-        current_training_loss = 0.0
-        current_training_accuracy = 0.0
         net = net.train()
         for i, data in enumerate(trainloader, 0):
             # get the inputs
@@ -47,21 +57,24 @@ def train_net(net, trainloader, valloader, logging, training_details: TrainingDe
 
             # print statistics and write to log
             running_loss += loss.item()
-            current_training_loss += loss.item()
-            if i % 20 == 19:  # print every 2000 mini-batches
+            training_loss += loss.item()
+            if i % print_every_samples == print_every_samples - 1:    # print every 2000 mini-batches
                 logging.info('[%d, %5d] Training loss: %.3f' %
-                             (epoch + 1, i + 1, running_loss / 20))
+                      (epoch + 1, i + 1, running_loss / print_every_samples))
                 running_loss = 0.0
-            current_training_accuracy += (outputs.argmax(1) == labels).sum().item()
+
+            training_accuracy += (outputs.argmax(1) == labels).sum().item()
+
         if type(scheduler).__name__ != 'NoneType':
             scheduler.step()
 
-        current_training_loss = current_training_loss / len(trainloader.dataset)
-        training_loss.append(current_training_loss)
-        current_training_accuracy = 100 * current_training_accuracy / len(trainloader.dataset)
-        training_accuracy.append(current_training_accuracy)
+        training_loss = training_loss / len(trainloader.dataset)
+        training_loss_list.append(training_loss)
+        training_accuracy = 100 * training_accuracy / len(trainloader.dataset)
+        training_accuracy_list.append(training_accuracy)
 
-        current_validation_loss = 0.0
+        running_loss = 0.0
+        val_loss = 0.0
         correct = 0
         net = net.eval()
         for i, data in enumerate(valloader, 0):
@@ -71,8 +84,7 @@ def train_net(net, trainloader, valloader, logging, training_details: TrainingDe
                 inputs, labels = inputs.cuda(), labels.cuda()
 
             # forward + backward + optimize
-            with torch.no_grad():
-                outputs = net(inputs)
+            outputs = net(inputs)
             loss = criterion(outputs, labels)
 
             if args.cuda:
@@ -80,16 +92,36 @@ def train_net(net, trainloader, valloader, logging, training_details: TrainingDe
 
             # print statistics and write to log
             running_loss += loss.item()
-            if i % 20 == 19:  # print every 2000 mini-batches
+            val_loss += loss.item()
+            if i % print_every_samples == print_every_samples - 1:  # print every 2000 mini-batches
                 logging.info('[%d, %5d] Validation loss: %.3f' %
-                             (epoch + 1, i + 1, running_loss / 20))
+                             (epoch + 1, i + 1, running_loss / print_every_samples))
                 running_loss = 0.0
             correct += (outputs.argmax(1) == labels).sum().item()
 
-        current_validation_loss = current_validation_loss / len(valloader.dataset)
-        validation_loss.append(current_validation_loss)
-        current_validation_accuracy = 100 * correct / len(valloader.dataset)
-        validation_accuracy.append(current_validation_accuracy)
+        val_loss = val_loss / len(valloader.dataset)
+        validation_loss_list.append(val_loss)
+        val_accuracy = 100 * correct / len(valloader.dataset)
+        validation_accuracy_list.append(val_accuracy)
+
+        if val_accuracy > best_validation_accuracy:
+            best_state_dictionary = copy.deepcopy(net.state_dict())
+            inertia = 0
+        else:
+            inertia += 1
+            if inertia == patience:
+                if best_state_dictionary is None:
+                    raise Exception("State dictionary should have been updated at least once")
+                break
+        print(f"Validation accuracy: {val_accuracy}")
+
+    end = time.process_time()
+    training_time = end - start
+    logging.info('Training Time: {}'.format(training_time))
+    
+    
+    # Apply best weights
+    net.load_state_dict(best_state_dictionary)
 
     # save network
     save_model_information(network=net,
@@ -97,13 +129,14 @@ def train_net(net, trainloader, valloader, logging, training_details: TrainingDe
                            optimizer=optimizer,
                            criterion=criterion,
                            scheduler=scheduler,
-                           validation_loss=validation_loss,
-                           validation_accuracy=validation_accuracy,
+                           validation_loss=validation_loss_list,
+                           validation_accuracy=validation_accuracy_list,
                            training_loss=training_loss,
                            training_accuracy=training_accuracy)
-    # write finish to the file
-    logging.info('Finished Training')
 
+    logging.info('Finished Training')
+    
+    return
 
 def main():
     network = AlexNet()
