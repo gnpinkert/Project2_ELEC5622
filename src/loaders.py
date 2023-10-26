@@ -106,10 +106,17 @@ def _get_data_dir_and_transform(loader_enum: LoaderType) -> Tuple[Path, torchvis
             raise RuntimeError(f"Invalid enum type: {loader_enum}")
 
 
-def create_data_loader(loader_enum: LoaderType) -> DataLoader[Any]:
+def create_data_set(loader_enum: LoaderType, custom_transform: transforms.Compose = None) -> ProjectData:
     data_dir, transform = _get_data_dir_and_transform(loader_enum)
+    transform = custom_transform if custom_transform is not None else transform
     file_paths = _get_image_filepaths(data_dir)
-    data_set = ProjectData(data=file_paths, labels=_load_label_csv(), transform=transform)
+    return ProjectData(data=file_paths,
+                       labels=_load_label_csv(),
+                       transform=transform)
+
+
+def create_data_loader(loader_enum: LoaderType, transform: transforms.Compose = None) -> DataLoader[Any]:
+    data_set = create_data_set(loader_enum=loader_enum, custom_transform=transform)
     return torch.utils.data.DataLoader(data_set, batch_size=BATCH_SIZE, shuffle=True, num_workers=NUMBER_OF_WORKERS)
 
 
