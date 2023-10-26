@@ -1,5 +1,4 @@
 from extras import create_logger, args, make_output_directory
-import logging
 import torch
 import copy
 from NetworkDetails import TrainingDetails, save_model_information
@@ -163,7 +162,7 @@ def main():
               trainloader=training_loader,
               valloader=validation_loader,
               training_details=training_details,
-              logging=logging)
+              logging=logger)
 
 
 if __name__ == "__main__":

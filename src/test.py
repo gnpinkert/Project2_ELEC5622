@@ -1,5 +1,4 @@
 from extras import create_logger, args
-import logging
 from network import AlexNet
 from NetworkDetails import TrainingDetails
 from loaders import create_data_loader, LoaderType
@@ -41,11 +40,11 @@ def eval_net(net, loader, final_output_path: Path):
         correct += (predicted == labels).sum().item()
 
     # print and write to log. DO NOT CHANGE HERE.
-    logging.info('=' * 55)
-    logging.info('SUMMARY of Project2')
+    logger.info('=' * 55)
+    logger.info('SUMMARY of Project2')
     logger.info('The number of testing image is {}'.format(total))
-    logging.info('Accuracy of the network on the test images: {} %'.format(100 * round(correct / total, 4)))
-    logging.info('=' * 55)
+    logger.info('Accuracy of the network on the test images: {} %'.format(100 * round(correct / total, 4)))
+    logger.info('=' * 55)
 
 
 def main():
