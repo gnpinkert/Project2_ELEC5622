@@ -5,6 +5,7 @@ from loaders import create_data_loader, LoaderType
 import torch
 from pathlib import Path
 from extras import get_repo_root_dir
+import time
 
 
 
@@ -12,6 +13,8 @@ def eval_net(net, loader, final_output_path: Path):
     logger = create_logger(args.output_path, final_output_path=final_output_path)
     logger.info('using args:')
     logger.info(args)
+    
+    total_time = 0.0
 
     net = net.eval()
     if args.cuda:
@@ -31,19 +34,25 @@ def eval_net(net, loader, final_output_path: Path):
         images, labels = data
         if args.cuda:
             images, labels = images.cuda(), labels.cuda()
+        start = time.process_time()
         outputs = net(images)
+        end = time.process_time()
+        total_time += end - start
         if args.cuda:
             outputs = outputs.cpu()
             labels = labels.cpu()
         _, predicted = torch.max(outputs.data, 1)
         total += labels.size(0)
         correct += (predicted == labels).sum().item()
+        
+    inf_time = total_time / len(loader.dataset)
 
     # print and write to log. DO NOT CHANGE HERE.
     logger.info('=' * 55)
     logger.info('SUMMARY of Project2')
     logger.info('The number of testing image is {}'.format(total))
     logger.info('Accuracy of the network on the test images: {} %'.format(100 * round(correct / total, 4)))
+    logger.info('Average Inference Time: {}'.format(inf_time))
     logger.info('=' * 55)
 
 
