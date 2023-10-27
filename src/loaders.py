@@ -11,7 +11,7 @@ from torch.utils.data import Dataset, DataLoader
 from extras import get_repo_root_dir
 
 BATCH_SIZE: int = 4
-NUMBER_OF_WORKERS: int = 10
+NUMBER_OF_WORKERS: int = 2
 
 LABEL_MAP = bidict({"Homogeneous": 0,
                     "Speckled": 1,
@@ -54,8 +54,9 @@ _test_transform = transforms.Compose([
 ])
 
 _train_transform = transforms.Compose([
+    transforms.Resize((224,224)),
     # transforms.RandomResizedCrop(size=224, scale=(0.8, 0.8)),
-    transforms.Resize((224, 224)),
+    # transforms.RandomRotation(degrees=180,expand=False),
     transforms.RandomHorizontalFlip(),
     transforms.RandomVerticalFlip(),
     transforms.ToTensor(),
@@ -97,7 +98,7 @@ def _get_data_dir_and_transform(loader_enum: LoaderType) -> Tuple[Path, torchvis
     data_dir = Path("training_data")
     match loader_enum:
         case loader_enum.TEST:
-            return data_dir / "test", _train_transform
+            return data_dir / "test", _test_transform
         case loader_enum.TRAIN:
             return data_dir / "training", _train_transform
         case loader_enum.VALIDATION:

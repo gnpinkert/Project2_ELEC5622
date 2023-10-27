@@ -4,3 +4,4 @@ venv/
 __pycache__
 !results/*/*.png
 !results/*.png
+models

@@ -47,7 +47,8 @@ def save_model_information(network: AlexNet,
                            validation_loss: List[float],
                            validation_accuracy: List[float],
                            training_loss: List[float],
-                           training_accuracy: List[float]):
+                           training_accuracy: List[float],
+                           training_time: float):
     torch.save(network.state_dict(), f=output_directory / "project2.pth")
     network_details = Path("network_details.txt")
     with open(output_directory / network_details, "w") as file:
@@ -58,3 +59,13 @@ def save_model_information(network: AlexNet,
         file.write(_get_scheduler_string(scheduler=scheduler))
         file.write(_get_optimizer_string(optimizer=optimizer))
         file.write(_get_criterion_string(criterion=criterion))
+        file.write(f"{training_time}\n")
+
+def save_inference_information(output_dir: Path,
+                               accuracy: float,
+                               avg_inference_time: float):
+    network_details = Path("inference.txt")
+    with open(output_dir / network_details, "w") as file:
+        file.write(f"{accuracy}\n"),
+        file.write(f"{avg_inference_time}\n"),
+    return

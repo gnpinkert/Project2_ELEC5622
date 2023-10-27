@@ -10,17 +10,18 @@ import time
 
 from network import AlexNet
 
-def train_net(net, trainloader, valloader, logging, training_details:TrainingDetails, print_every_samples = 50, patience = 3):
+def train_net(net, trainloader, valloader, logging, training_details:TrainingDetails, print_every_samples = 50, patience = 3, fix_weights = False):
 
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(params=net.parameters(),
                           lr=training_details.learning_rate,
                           momentum=training_details.momentum)  # adjust optimizer settings
     scheduler = None
-    for param in net.alexnet.parameters():
-         param.requires_grad = False
-    for param in net.alexnet.classifier.parameters():
-        param.requires_grad = True
+    if fix_weights == True:
+        for param in net.alexnet.parameters():
+             param.requires_grad = False
+        for param in net.alexnet.classifier.parameters():
+            param.requires_grad = True
 
     validation_loss_list = []
     training_loss_list = []
@@ -130,8 +131,9 @@ def train_net(net, trainloader, valloader, logging, training_details:TrainingDet
                            scheduler=scheduler,
                            validation_loss=validation_loss_list,
                            validation_accuracy=validation_accuracy_list,
-                           training_loss=training_loss,
-                           training_accuracy=training_accuracy)
+                           training_loss=training_loss_list,
+                           training_accuracy=training_accuracy_list,
+                           training_time = training_time)
 
     logging.info('Finished Training')
     
@@ -147,7 +149,7 @@ def main():
     training_details = TrainingDetails(batch_size=BATCH_SIZE,
                                        learning_rate=0.0004,
                                        momentum=0.9,
-                                       epochs=10,
+                                       epochs=20,
                                        output_dir=Path(""))
 
     output_directory = make_output_directory(training_details=training_details)

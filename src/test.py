@@ -1,6 +1,6 @@
 from extras import create_logger, args
 from network import AlexNet
-from NetworkDetails import TrainingDetails
+from NetworkDetails import TrainingDetails, save_inference_information
 from loaders import create_data_loader, LoaderType
 import torch
 from pathlib import Path
@@ -46,14 +46,19 @@ def eval_net(net, loader, final_output_path: Path):
         correct += (predicted == labels).sum().item()
         
     inf_time = total_time / len(loader.dataset)
+    acc = 100 * round(correct / total, 4)
 
     # print and write to log. DO NOT CHANGE HERE.
     logger.info('=' * 55)
     logger.info('SUMMARY of Project2')
     logger.info('The number of testing image is {}'.format(total))
-    logger.info('Accuracy of the network on the test images: {} %'.format(100 * round(correct / total, 4)))
+    logger.info('Accuracy of the network on the test images: {} %'.format(acc))
     logger.info('Average Inference Time: {}'.format(inf_time))
     logger.info('=' * 55)
+    
+    save_inference_information(output_dir = final_output_path,
+                              accuracy = acc,
+                              avg_inference_time = inf_time)
 
 
 def main():
@@ -63,7 +68,8 @@ def main():
                                     momentum=0.9,
                                     epochs=1,
                                     output_dir=Path())
-    target_dir = get_repo_root_dir() / "models" / str(training_data) / "14_30_50"
+    # target_dir = get_repo_root_dir() / "models" / str(training_data) / "14_30_50"
+    target_dir = Path('')
 
     if not target_dir.exists():
         raise FileNotFoundError(f"Can't find existing model since target dir: \"{target_dir}\" does not exist")
